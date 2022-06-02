@@ -2,6 +2,7 @@
 name = "elstatus"
 version = "0.1.0"
 edition = "2021"
+description="Elevator Status - powered by wheelmap.org"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -9,3 +10,7 @@ edition = "2021"
 reqwest={version="0.11", features=["blocking"]}
 serde_json="1.0"
 futures="0.3"
+lettre="0.10.0-rc.6"
+tera="1.15"
+serde={version= "1", features=["derive"]}
+clap = { version = "3.1.18", features = ["derive"] }

@@ -1,0 +1,19 @@
+Aufzugstatus:
+
+{% for equipment in equipments %}
+  Aufzug {{ equipment.name }} in {{ equipment.place }}
+  {% if equipment.working %}
+    Status: In Betrieb
+  {% elif equipment.working == undefined %}
+    Status: Unbekannt
+  {% else %}
+    Status: Außer Betrieb
+  {% endif %}
+{% endfor %}
+
+{% if errors %}
+  Fehler bei der Abfrage:
+  {% for err in errors %}
+    {{ err }}
+  {% endfor %}
+{% endif %}
