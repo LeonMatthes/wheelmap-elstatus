@@ -4,12 +4,14 @@ use std::error::Error;
 
 const ACCESS_TOKEN: &str = "aacf2356050724fdb65b7351f5f01eef";
 
-const EQUIPMENTS: [&str; 5] = [
-    "qo7jxc6E524sBuCp7",
-    "DibiBDQsW5XcyxmqW",
-    "6wE7kq4Ls8w9u6rQ2",
-    "Rg5vjFd8aYChyc2uX",
-    "99LqXyQugBDKs5myG",
+const EQUIPMENTS: [&str; 7] = [
+    "9amZbfB2xrpJGxLmC",
+    "2YwDfzbMCfjMDqaAp",
+    "hRR9Ykr9QfCHCjvhw",
+    "4cthbRCScrqqh8b8i",
+    "EjDyrojPofCSSzqMj",
+    "42kPQ5KuFsyZuLzJy",
+    "hYedGLoSr8DShety6",
 ];
 
 #[derive(Debug)]
