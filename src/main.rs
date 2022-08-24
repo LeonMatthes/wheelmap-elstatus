@@ -1,22 +1,61 @@
+use lazy_static::lazy_static;
 use serde::Serialize;
 use serde_json::Value;
 use std::error::Error;
 
 const ACCESS_TOKEN: &str = "aacf2356050724fdb65b7351f5f01eef";
 
-const EQUIPMENTS: [&str; 7] = [
-    "9amZbfB2xrpJGxLmC",
-    "2YwDfzbMCfjMDqaAp",
-    "hRR9Ykr9QfCHCjvhw",
-    "4cthbRCScrqqh8b8i",
-    "EjDyrojPofCSSzqMj",
-    "42kPQ5KuFsyZuLzJy",
-    "hYedGLoSr8DShety6",
-];
+struct EquipmentList {
+    latitude: f32,
+    longitude: f32,
+    equipment_searches: Vec<&'static str>,
+}
+
+lazy_static! {
+    static ref EQUIPMENTS: Vec<EquipmentList> = vec! [
+        // Berlin-Wannsee
+        EquipmentList {
+            latitude: 52.422206,
+            longitude: 13.1810253,
+            equipment_searches: vec![
+                "Gleis 1/2",
+                "Gleis 3/4",
+                "EG Tunnel",
+            ]
+        },
+        EquipmentList {
+            latitude: 52.394356,
+            longitude: 13.127521,
+            equipment_searches: vec![
+                "Gleis 1/2",
+                "Gleis 5"
+            ]
+        },
+        EquipmentList {
+            latitude: 52.443315,
+            longitude: 13.293771,
+            equipment_searches: vec![
+                "Gleis 1/2 (S-Bahn)",
+                "EG Tunnel"
+            ]
+        }
+    ];
+}
+
+// const EQUIPMENTS: [&str; 7] = [
+//     "9amZbfB2xrpJGxLmC",
+//     "2YwDfzbMCfjMDqaAp",
+//     "hRR9Ykr9QfCHCjvhw",
+//     "4cthbRCScrqqh8b8i",
+//     "EjDyrojPofCSSzqMj",
+//     "42kPQ5KuFsyZuLzJy",
+//     "hYedGLoSr8DShety6",
+// ];
 
 #[derive(Debug)]
 enum EquipmentAccessError {
     MissingValue(String, String),
+    InvalidType { expected_type: String, json: String },
 }
 
 impl std::fmt::Display for EquipmentAccessError {
@@ -25,28 +64,30 @@ impl std::fmt::Display for EquipmentAccessError {
             EquipmentAccessError::MissingValue(value, json) => {
                 write!(f, "Missing value: {} in JSON: {}", value, json)
             }
+            EquipmentAccessError::InvalidType {
+                expected_type,
+                json,
+            } => {
+                write!(
+                    f,
+                    "Expected JSON: {} to be of type: {}",
+                    json, expected_type
+                )
+            }
         }
     }
 }
 
 impl Error for EquipmentAccessError {}
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 struct Equipment {
     name: String,
     working: Option<bool>,
     place: Option<String>,
 }
 
-fn get_equipment(equipment: &str) -> Result<Equipment, Box<dyn Error>> {
-    let request = reqwest::blocking::get(format!(
-        "https://accessibility-cloud.freetls.fastly.net/equipment-infos/{}.json?appToken={}",
-        equipment, ACCESS_TOKEN
-    ))?;
-
-    let json_string = request.text()?;
-    let json: Value = serde_json::from_str(&*json_string)?;
-
+fn parse_equipment(json: &Value) -> Result<Equipment, EquipmentAccessError> {
     if let Some(properties) = &json.get("properties") {
         let working = properties
             .get("isWorking")
@@ -55,7 +96,7 @@ fn get_equipment(equipment: &str) -> Result<Equipment, Box<dyn Error>> {
         let name = properties
             .get("description")
             .and_then(|description| description.get("de").unwrap_or(description).as_str())
-            .unwrap_or(&*format!("'Unknown name! - Id: {}'", equipment))
+            .unwrap_or("Cannot find description!")
             .to_owned();
         let place = properties
             .get("placeInfoName")
@@ -68,11 +109,89 @@ fn get_equipment(equipment: &str) -> Result<Equipment, Box<dyn Error>> {
             place,
         })
     } else {
-        Err(Box::new(EquipmentAccessError::MissingValue(
-            "properties".to_owned(),
-            json_string,
-        )))
+        Err(EquipmentAccessError::MissingValue(
+            "description".to_owned(),
+            json.to_string(),
+        ))
     }
+}
+
+fn parse_equipment_list(json: &Value) -> Result<Vec<Equipment>, Vec<EquipmentAccessError>> {
+    if let Some(equipments) = json.as_array() {
+        let (equipments, errors): (Vec<_>, _) = equipments
+            .iter()
+            .map(parse_equipment)
+            .partition(Result::is_ok);
+
+        let equipments: Vec<Equipment> = equipments.into_iter().filter_map(Result::ok).collect();
+        let errors = errors.into_iter().filter_map(Result::err).collect();
+
+        if equipments.is_empty() {
+            Err(errors)
+        } else {
+            Ok(equipments)
+        }
+    } else {
+        Err(vec![EquipmentAccessError::InvalidType {
+            expected_type: "Array".to_string(),
+            json: json.to_string(),
+        }])
+    }
+}
+
+fn get_equipments(list: &EquipmentList) -> Result<Vec<Equipment>, Box<dyn Error>> {
+    let request = reqwest::blocking::get(format!(
+        "https://accessibility-cloud.freetls.fastly.net/equipment-infos.json?appToken={}&latitude={}&longitude={}&accuracy=500",
+        ACCESS_TOKEN, list.latitude, list.longitude
+    ))?;
+
+    let json_string = request.text()?;
+    let json: Value = serde_json::from_str(&*json_string)?;
+
+    if let Some(features) = json.get("features") {
+        let equipments = parse_equipment_list(features);
+
+        match equipments {
+            Ok(source_equipments) => {
+                let mut corpus = ngrammatic::CorpusBuilder::new().finish();
+                for equipment in &source_equipments {
+                    corpus.add_text(&*equipment.name);
+                }
+
+                let mut results = Vec::new();
+
+                for search in &list.equipment_searches {
+                    let query_result = corpus.search(search, 0.4);
+
+                    if let Some(result_name) = query_result.first() {
+                        if let Some(equipment) = source_equipments
+                            .iter()
+                            .find(|equipment| equipment.name == result_name.text)
+                        {
+                            results.push(equipment.clone());
+                        }
+                    }
+                }
+
+                return Ok(results);
+            }
+            Err(errors) => {
+                let errors_string: String = errors
+                    .iter()
+                    .map(EquipmentAccessError::to_string)
+                    .fold(String::new(), |a, b| a + "\n" + &*b);
+                return Err(format!(
+                    "Errors encountered when sourcing equipments:\n{}",
+                    errors_string
+                )
+                .into());
+            }
+        }
+    }
+    Err(Box::new(EquipmentAccessError::MissingValue(
+        "".to_owned(),
+        json_string,
+    )))
 }
 
 use lettre::transport::smtp::authentication::Credentials;
@@ -224,11 +343,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     ])?;
 
     let (equipments, errors): (Vec<_>, Vec<_>) = EQUIPMENTS
-        .into_iter()
-        .map(get_equipment)
+        .iter()
+        .map(get_equipments)
         .partition(Result::is_ok);
 
-    let equipments: Vec<_> = equipments.into_iter().map(Result::unwrap).collect();
+    let equipments: Vec<_> = equipments.into_iter().flat_map(Result::unwrap).collect();
     let errors: Vec<_> = errors
         .into_iter()
         .map(Result::err)

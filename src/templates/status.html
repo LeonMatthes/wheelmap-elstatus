@@ -3,11 +3,11 @@
 {% for equipment in equipments %}
   <h2> Aufzug {{ equipment.name }} in {{ equipment.place }}</h2>
   {% if equipment.working %}
-  <h3><p style="color:green">In Betrieb</p></h3>
+  <h3><p style="color:green">✅ In Betrieb</p></h3>
   {% elif equipment.working == undefined %}
-  <h3><p style="color:grey">Status unbekannt</p></h3>
+  <h3><p style="color:grey">❔ Status unbekannt</p></h3>
   {% else %}
-  <h3><p style="color:red">Außer Betrieb</p></h3>
+  <h3><p style="color:red">⛔ Außer Betrieb</p></h3>
   {% endif %}
 {% endfor %}
 
