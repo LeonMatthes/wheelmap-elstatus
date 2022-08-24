@@ -42,16 +42,6 @@ lazy_static! {
     ];
 }
 
-// const EQUIPMENTS: [&str; 7] = [
-//     "9amZbfB2xrpJGxLmC",
-//     "2YwDfzbMCfjMDqaAp",
-//     "hRR9Ykr9QfCHCjvhw",
-//     "4cthbRCScrqqh8b8i",
-//     "EjDyrojPofCSSzqMj",
-//     "42kPQ5KuFsyZuLzJy",
-//     "hYedGLoSr8DShety6",
-// ];
-
 #[derive(Debug)]
 enum EquipmentAccessError {
     MissingValue(String, String),
