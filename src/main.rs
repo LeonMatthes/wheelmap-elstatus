@@ -45,7 +45,14 @@ lazy_static! {
 #[derive(Debug)]
 enum EquipmentAccessError {
     MissingValue(String, String),
-    InvalidType { expected_type: String, json: String },
+    InvalidType {
+        expected_type: String,
+        json: String,
+    },
+    HTTPRequestError {
+        status: reqwest::StatusCode,
+        response_text: String,
+    },
 }
 
 impl std::fmt::Display for EquipmentAccessError {
@@ -62,6 +69,17 @@ impl std::fmt::Display for EquipmentAccessError {
                     f,
                     "Expected JSON: {} to be of type: {}",
                     json, expected_type
+                )
+            }
+            EquipmentAccessError::HTTPRequestError {
+                status,
+                response_text,
+            } => {
+                write!(
+                    f,
+                    "HTTP request failed, error code: {}\n{}",
+                    status.as_str(),
+                    response_text
                 )
             }
         }
@@ -134,6 +152,14 @@ fn get_equipments(list: &EquipmentList) -> Result<Vec<Equipment>, Box<dyn Error>
         "https://accessibility-cloud.freetls.fastly.net/equipment-infos.json?appToken={}&latitude={}&longitude={}&accuracy=500",
         ACCESS_TOKEN, list.latitude, list.longitude
     ))?;
+
+    if !request.status().is_success() {
+        return Err(EquipmentAccessError::HTTPRequestError {
+            status: request.status(),
+            response_text: request.text().unwrap_or("No text received!".to_owned()),
+        }
+        .into());
+    }
 
     let json_string = request.text()?;
     let json: Value = serde_json::from_str(&*json_string)?;
@@ -346,6 +372,10 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     for equipment in equipments.iter() {
         println!("{:?}", equipment);
+    }
+
+    for error in errors.iter() {
+        println!("Error: {}", error);
     }
 
     send_result(&equipments, &errors, &tera, &args);
