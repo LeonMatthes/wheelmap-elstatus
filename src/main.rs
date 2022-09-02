@@ -3,7 +3,7 @@ use serde::Serialize;
 use serde_json::Value;
 use std::error::Error;
 
-const ACCESS_TOKEN: &str = "aacf2356050724fdb65b7351f5f01eef";
+const ACCESS_TOKEN: &str = "YOUR_ACCESS_TOKEN";
 
 struct EquipmentList {
     latitude: f32,
