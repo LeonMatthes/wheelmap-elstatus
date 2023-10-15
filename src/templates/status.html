@@ -1,14 +1,17 @@
-<h1>Aufzugstatus</h1>
-
+{% set_global previous_place = "" %}
 {% for equipment in equipments %}
-  <h2> Aufzug {{ equipment.name }} in {{ equipment.place }}</h2>
-  {% if equipment.working %}
-  <h3><p style="color:green">✅ In Betrieb</p></h3>
-  {% elif equipment.working == undefined %}
-  <h3><p style="color:grey">❔ Status unbekannt</p></h3>
-  {% else %}
-  <h3><p style="color:red">⛔ Außer Betrieb</p></h3>
+  {% if previous_place != equipment.place %}
+    <h2> {{equipment.place}} </h2>
   {% endif %}
+  {% if equipment.working %}
+  <h3><p style="color:green">✅ 
+  {% elif equipment.working == undefined %}
+  <h3><p style="color:grey">❔ 
+  {% else %}
+  <h3><p style="color:red">⛔ 
+  {% endif %}
+  Aufzug {{ equipment.name }} </p></h3>
+  {% set_global previous_place = equipment.place %}
 {% endfor %}
 
 {% if errors %}

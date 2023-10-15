@@ -23,6 +23,7 @@ lazy_static! {
                 "EG Tunnel",
             ]
         },
+        // Potsdam Griebnitzsee
         EquipmentList {
             latitude: 52.394356,
             longitude: 13.127521,
@@ -31,12 +32,23 @@ lazy_static! {
                 "Gleis 5"
             ]
         },
+        // Potsdamer Platz
         EquipmentList {
-            latitude: 52.443315,
-            longitude: 13.293771,
+            latitude: 52.50925,
+            longitude: 13.3766,
             equipment_searches: vec![
+                "Gleis 11/12 (S-Bahn)",
+                "Gleis 13/14 (S-Bahn)",
+                "EG zu UG"
+            ]
+        },
+        // Anhalter Bahnhof
+        EquipmentList {
+            latitude: 52.503283,
+            longitude: 13.38133,
+            equipment_searches: vec! [
                 "Gleis 1/2 (S-Bahn)",
-                "EG Tunnel"
+                "Gleis 3/4 (S-Bahn)",
             ]
         }
     ];
@@ -52,6 +64,9 @@ enum EquipmentAccessError {
     HTTPRequestError {
         status: reqwest::StatusCode,
         response_text: String,
+    },
+    CannotFindEquipment {
+        query_text: String,
     },
 }
 
@@ -81,6 +96,9 @@ impl std::fmt::Display for EquipmentAccessError {
                     status.as_str(),
                     response_text
                 )
+            }
+            EquipmentAccessError::CannotFindEquipment { query_text } => {
+                write!(f, "Could not find elevator: {}", query_text)
             }
         }
     }
@@ -162,7 +180,7 @@ fn get_equipments(list: &EquipmentList) -> Result<Vec<Equipment>, Box<dyn Error>
     }
 
     let json_string = request.text()?;
-    let json: Value = serde_json::from_str(&*json_string)?;
+    let json: Value = serde_json::from_str(&json_string)?;
 
     if let Some(features) = json.get("features") {
         let equipments = parse_equipment_list(features);
@@ -171,21 +189,24 @@ fn get_equipments(list: &EquipmentList) -> Result<Vec<Equipment>, Box<dyn Error>
             Ok(source_equipments) => {
                 let mut corpus = ngrammatic::CorpusBuilder::new().finish();
                 for equipment in &source_equipments {
-                    corpus.add_text(&*equipment.name);
+                    corpus.add_text(&equipment.name);
                 }
 
                 let mut results = Vec::new();
 
-                for search in &list.equipment_searches {
+                for &search in &list.equipment_searches {
                     let query_result = corpus.search(search, 0.4);
 
-                    if let Some(result_name) = query_result.first() {
-                        if let Some(equipment) = source_equipments
+                    if let Some(equipment) = query_result.first().and_then(|result_name| {
+                        source_equipments
                             .iter()
                             .find(|equipment| equipment.name == result_name.text)
-                        {
-                            results.push(equipment.clone());
-                        }
+                    }) {
+                        results.push(equipment.clone());
+                    } else {
+                        return Err(Box::new(EquipmentAccessError::CannotFindEquipment {
+                            query_text: search.to_owned(),
+                        }));
                     }
                 }
 
@@ -252,10 +273,10 @@ fn send_result(
     );
     let html_message = tera
         .render("status.html", &context)
-        .unwrap_or_else(|err| format!("Error while creating message: {}", err.to_string()));
+        .unwrap_or_else(|err| format!("Error while creating message: {}", err));
     let text_message = tera
         .render("status.txt", &context)
-        .unwrap_or_else(|err| format!("Error while creating message: {}", err.to_string()));
+        .unwrap_or_else(|err| format!("Error while creating message: {}", err));
 
     let email = Message::builder()
         .from(format!("ElStatus <{}>", args.smtp_user).parse().unwrap())
@@ -272,7 +293,7 @@ fn send_result(
 
     let creds = Credentials::new(args.smtp_user.clone(), args.smtp_password.clone());
 
-    let mailer = SmtpTransport::relay(&*args.smtp_server)
+    let mailer = SmtpTransport::relay(&args.smtp_server)
         .unwrap()
         .credentials(creds)
         .build();
