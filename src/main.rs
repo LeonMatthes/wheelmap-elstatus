@@ -109,6 +109,7 @@ impl Error for EquipmentAccessError {}
 #[derive(Debug, Serialize, Clone)]
 struct Equipment {
     name: String,
+    category: String,
     working: Option<bool>,
     place: Option<String>,
 }
@@ -124,6 +125,11 @@ fn parse_equipment(json: &Value) -> Result<Equipment, EquipmentAccessError> {
             .and_then(|description| description.get("de").unwrap_or(description).as_str())
             .unwrap_or("Cannot find description!")
             .to_owned();
+        let category = properties
+            .get("category")
+            .and_then(Value::as_str)
+            .unwrap_or("elevator")
+            .to_owned();
         let place = properties
             .get("placeInfoName")
             .and_then(Value::as_str)
@@ -131,6 +137,7 @@ fn parse_equipment(json: &Value) -> Result<Equipment, EquipmentAccessError> {
 
         Ok(Equipment {
             name,
+            category,
             working,
             place,
         })
@@ -149,7 +156,14 @@ fn parse_equipment_list(json: &Value) -> Result<Vec<Equipment>, Vec<EquipmentAcc
             .map(parse_equipment)
             .partition(Result::is_ok);
 
-        let equipments: Vec<Equipment> = equipments.into_iter().filter_map(Result::ok).collect();
+        let equipments: Vec<Equipment> = equipments
+            .into_iter()
+            .filter_map(Result::ok)
+            // reject any escalators or other
+            // unknown equipment which may
+            // have the same name
+            .filter(|equipment| equipment.category.to_lowercase() == "elevator")
+            .collect();
         let errors = errors.into_iter().filter_map(Result::err).collect();
 
         if equipments.is_empty() {
@@ -262,7 +276,7 @@ fn send_result(
         (0, _, _) if num_ok > 0 && num_unknown > 0 => "Kein defekter Aufzug (einige Unbekannt)!",
         (0, 0, _) => "Warnung: Aufzugstatus unbekannt!",
         (0, _, 0) => "Alle Aufzüge funktionieren!",
-        (_, _, _) => "Achtung: Defekter Aufzug auf Arbeitsweg!",
+        (_, _, _) => "Achtung: Defekter Aufzug auf dem Weg!",
     };
 
     let mut context = tera::Context::new();

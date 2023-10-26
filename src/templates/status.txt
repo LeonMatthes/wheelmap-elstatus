@@ -4,7 +4,7 @@ Aufzugstatus:
   Aufzug {{ equipment.name }} in {{ equipment.place }}
   {% if equipment.working %}
     Status: In Betrieb
-  {% elif equipment.working == undefined %}
+  {% elif equipment.working is undefined %}
     Status: Unbekannt
   {% else %}
     Status: Außer Betrieb

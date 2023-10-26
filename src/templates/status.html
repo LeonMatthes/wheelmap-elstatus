@@ -5,7 +5,7 @@
   {% endif %}
   {% if equipment.working %}
   <h3><p style="color:green">✅ 
-  {% elif equipment.working == undefined %}
+  {% elif equipment.working is undefined %}
   <h3><p style="color:grey">❔ 
   {% else %}
   <h3><p style="color:red">⛔ 
