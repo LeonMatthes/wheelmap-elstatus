@@ -1,0 +1,88 @@
+struct Elevator {
+  place: string,
+  name: string,
+}
+
+component MyText inherits Text {
+  font-weight: 900;
+  font-family: "DejaVu Sans";
+}
+
+export component MainTag inherits Window {
+  width: 296px;
+  height: 128px;
+  background: white;
+
+  in property <[Elevator]> broken: [
+    { place: "test", name: "test"},
+    { place: "test", name: "test"},
+    { place: "test", name: "test"},
+  ];
+  in property <string> last_update: "18.11. - 16:20";
+
+  Image {
+    source: broken.length == 0 ? @image-url("elevator.png") : @image-url("elevator-blocked.png");
+    x: 0px;
+    height: parent.height;
+    width: self.height;
+  }
+
+  Rectangle {
+    x: 128px;
+    width: parent.width - 128px;
+    height: parent.height;
+ 
+    // Everthing is fine
+    VerticalLayout {
+      visible: broken.length == 0;
+      width: parent.width;
+      height: parent.height;
+      MyText {
+        text: "ElStatus";
+        horizontal-alignment: TextHorizontalAlignment.center;
+        vertical-alignment: TextVerticalAlignment.bottom;
+        font-size: 30px;
+      }
+      MyText {
+        text: "Last Update:";
+        horizontal-alignment: TextHorizontalAlignment.center;
+        height: self.min-height;
+      }
+      MyText {
+        text: last_update;
+        horizontal-alignment: TextHorizontalAlignment.center;
+        font-size: 16px;
+      }
+    }
+
+    // some items broken
+    VerticalLayout {
+      visible: broken.length > 0;
+      width: parent.width;
+      height: parent.height;
+      HorizontalLayout {
+        spacing: 10px;
+        MyText {
+          text: broken.length;
+          color: red;
+          font-size: 50px;
+          horizontal-alignment: TextHorizontalAlignment.right;
+          vertical-alignment: TextVerticalAlignment.center;
+        }
+        MyText {
+          text: broken.length == 1 ? "Aufzug\ndefekt" : "Aufzüge\ndefekt";
+          font-weight: 900;
+          vertical-alignment: TextVerticalAlignment.center;
+          font-size: 25px;
+          color: red;
+        }
+      }
+      
+      MyText {
+        text: last_update;
+        horizontal-alignment: TextHorizontalAlignment.center;
+        font-size: 16px;
+      }
+    }
+  }
+}
