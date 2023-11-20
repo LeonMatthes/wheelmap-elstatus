@@ -42,6 +42,7 @@ pub fn update(equipments: &[Equipment], args: &DisplayArgs) -> Result<(), Box<dy
 }
 
 fn render_ui(equipments: &[Equipment]) -> RgbImage {
+    println!("💻 Rendering GUI");
     let broken_equipments: Vec<_> = equipments
         .iter()
         .filter(|eq| !eq.working.unwrap_or(false))
@@ -77,7 +78,6 @@ fn render_ui(equipments: &[Equipment]) -> RgbImage {
     slint::platform::update_timers_and_animations();
 
     window.draw_if_needed(|software_renderer| {
-        println!("rendering!");
         software_renderer.render(&mut frame_buffer, WIDTH);
     });
 
@@ -119,15 +119,16 @@ fn upload_image(args: &DisplayArgs, image: &RgbImage) -> Result<(), Box<dyn Erro
     let mut last_result = Ok(());
     const NUM_RETRIES: i32 = 5;
     for i in 1..NUM_RETRIES + 1 {
-        println!("Uploading");
+        println!("📶 Uploading");
         let result = try_uploading(&args, &client);
         if result.is_ok() {
+            println!("✅ Successfully uploaded");
             return Ok(());
         }
 
         last_result = result;
         println!(
-            "{i}/{NUM_RETRIES} upload failed - retrying in {} ms!",
+            "⚠️ {i}/{NUM_RETRIES} upload failed - retrying in {} ms!",
             delay.as_millis()
         );
         std::thread::sleep(delay);
