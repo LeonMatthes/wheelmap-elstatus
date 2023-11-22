@@ -9,7 +9,7 @@ use slint::{
     platform::{software_renderer::*, Platform, PlatformError, WindowAdapter},
     Rgb8Pixel, VecModel,
 };
-use std::{error::Error, io::Cursor, path::Path, rc::Rc, sync::Mutex, time::Duration};
+use std::{error::Error, path::Path, rc::Rc, sync::Mutex, time::Duration};
 
 const WIDTH: usize = 296;
 const HEIGHT: usize = 128;
@@ -52,8 +52,8 @@ pub fn update(equipments: &[Equipment], args: &DisplayArgs) -> Result<(), Box<dy
     render_ui(equipments);
 
     upload_image(&args.ap_address, &args.main_tag, "elstatus.jpg")?;
-    // println!("⏳ Waiting 30 seconds before uploading secondary image");
-    // std::thread::sleep(Duration::from_secs(30));
+    println!("⏳ Waiting 10 seconds before uploading secondary image");
+    std::thread::sleep(Duration::from_secs(10));
     upload_image(
         &args.ap_address,
         &args.secondary_tag,
