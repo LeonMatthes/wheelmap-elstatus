@@ -92,7 +92,7 @@ fn render_ui(equipments: &[Equipment]) -> (RgbImage, RgbImage) {
     let hour = now.hour();
     let minute = now.minute();
 
-    let last_update = format!("{day}.{month}. - {hour}:{minute}");
+    let last_update = format!("{day:0>2}.{month:0>2}. - {hour:0>2}:{minute:0>2}");
 
     let mut main_tag_fb = vec![Rgb8Pixel::default(); WIDTH * HEIGHT];
     let mut secondary_tag_fb = vec![Rgb8Pixel::default(); WIDTH * HEIGHT];
