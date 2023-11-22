@@ -1,0 +1,65 @@
+import { MyText, Elevator } from "./lib.slint";
+
+export component SecondaryTag inherits Rectangle {
+    width: 296px;
+    height: 128px;
+    background: white;
+  
+    in property <[Elevator]> broken: [
+      { place: "Berlin-Wannsee", name: "Gleis 1/2 (S-Bahn)"},
+      { place: "Potsdamer Platz", name: "EG -> Mittelpassarelle"},
+    ];
+    in property <string> last_update: "18.11. - 16:20";
+
+    header := HorizontalLayout {
+        x: 0;
+        y: 0;
+        width: parent.width;
+        height: self.preferred-height;
+        padding: 5px;
+
+
+        MyText {
+          text: "ElStatus";
+        }
+        spacer := Rectangle { background: transparent; }
+        MyText {
+          text: last-update;
+        }
+    }
+
+    line := Rectangle {
+      x: 0;
+      y: header.y + header.height;
+      width: parent.width;
+      height: 2px;
+
+      background: black;
+    }
+
+    VerticalLayout {
+      x: 0;
+      y: header.y + header.height;
+      width: parent.width;
+      padding: 10px;
+      spacing: 5px;
+      alignment: LayoutAlignment.start;
+
+      for broken_lift in broken: HorizontalLayout {
+        alignment: LayoutAlignment.start;
+        spacing: 5px;
+        MyText {
+          color: red;
+          font-size: 14px;
+          horizontal-alignment: TextHorizontalAlignment.left;
+          text: broken-lift.place;
+        }
+        MyText {
+          vertical-alignment: TextVerticalAlignment.center;
+          horizontal-alignment: TextHorizontalAlignment.left;
+          text: broken-lift.name;
+        }
+      }
+
+    }
+}
