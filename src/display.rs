@@ -48,7 +48,25 @@ impl Platform for MyPlatform {
     }
 }
 
+const STATE_FILE: &str = "/tmp/elstatus.state.json";
+
+fn has_changed(equipments: &[Equipment]) -> Result<bool, Box<dyn Error>> {
+    let equipments_json = std::fs::read_to_string(STATE_FILE)?;
+    Ok(serde_json::de::from_str::<Vec<Equipment>>(&equipments_json)? != equipments)
+}
+
+fn store_state(equipments: &[Equipment]) -> Result<(), Box<dyn Error>> {
+    std::fs::write(STATE_FILE, serde_json::ser::to_string(equipments)?)?;
+    Ok(())
+}
+
 pub fn update(equipments: &[Equipment], args: &DisplayArgs) -> Result<(), Box<dyn Error>> {
+    if !has_changed(equipments).unwrap_or(true) {
+        println!("🔁 No change in state detected, skipping update");
+        return Ok(());
+    }
+    store_state(equipments).ok();
+
     render_ui(equipments);
 
     upload_image(&args.ap_address, &args.main_tag, "elstatus.jpg")?;

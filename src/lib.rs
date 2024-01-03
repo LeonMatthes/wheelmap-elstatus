@@ -1,4 +1,4 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::error::Error;
 
@@ -57,7 +57,7 @@ impl std::fmt::Display for EquipmentAccessError {
 
 impl Error for EquipmentAccessError {}
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
 pub struct Equipment {
     name: String,
     category: String,
