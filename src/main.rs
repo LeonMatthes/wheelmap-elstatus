@@ -1,8 +1,8 @@
+use clap::{Parser, Subcommand};
+use elstatus::*;
 use lazy_static::lazy_static;
 use std::error::Error;
 use tera::Tera;
-use clap::{Parser, Subcommand};
-use elstatus::*;
 
 lazy_static! {
     static ref EQUIPMENTS: Vec<EquipmentList> = vec! [
@@ -25,25 +25,42 @@ lazy_static! {
                 "Gleis 5"
             ]
         },
-        // Potsdamer Platz
+        // Berlin Hauptbahnhof
         EquipmentList {
-            latitude: 52.50925,
-            longitude: 13.3766,
+            latitude: 52.525303,
+            longitude: 13.369338,
             equipment_searches: vec![
-                "Gleis 11/12 (S-Bahn)",
-                "Gleis 13/14 (S-Bahn)",
-                "EG zu UG"
+                "Gleis 3/4 (C/D) - Gleis 15/16",
+                "Gleis 5/6 (C/D) - Gleis 15/16",
             ]
         },
-        // Anhalter Bahnhof
+        // Zoologischer Garten
         EquipmentList {
-            latitude: 52.503283,
-            longitude: 13.38133,
-            equipment_searches: vec! [
-                "Gleis 1/2 (S-Bahn)",
-                "Gleis 3/4 (S-Bahn)",
+            latitude: 52.507_28,
+            longitude: 13.332334,
+            equipment_searches: vec![
+                "Gleis 5/6 (S-Bahn)"
             ]
         }
+        // Potsdamer Platz
+        // EquipmentList {
+        //     latitude: 52.50925,
+        //     longitude: 13.3766,
+        //     equipment_searches: vec![
+        //         "Gleis 11/12 (S-Bahn)",
+        //         "Gleis 13/14 (S-Bahn)",
+        //         "EG zu UG"
+        //     ]
+        // },
+        // // Anhalter Bahnhof
+        // EquipmentList {
+        //     latitude: 52.503283,
+        //     longitude: 13.38133,
+        //     equipment_searches: vec! [
+        //         "Gleis 1/2 (S-Bahn)",
+        //         "Gleis 3/4 (S-Bahn)",
+        //     ]
+        // }
     ];
 }
 
