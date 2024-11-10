@@ -65,7 +65,6 @@ pub fn update(equipments: &[Equipment], args: &DisplayArgs) -> Result<(), Box<dy
         println!("🔁 No change in state detected, skipping update");
         return Ok(());
     }
-    store_state(equipments).ok();
 
     render_ui(equipments);
 
@@ -76,7 +75,12 @@ pub fn update(equipments: &[Equipment], args: &DisplayArgs) -> Result<(), Box<dy
         &args.ap_address,
         &args.secondary_tag,
         "elstatus_secondary.jpg",
-    )
+    )?;
+
+    // Only update the state if the update succeeded
+    store_state(equipments).ok();
+
+    Ok(())
 }
 
 fn write_frame_buffer_to<P: AsRef<Path>>(path: P, frame_buffer: &[Rgb8Pixel]) -> RgbImage {
@@ -86,6 +90,7 @@ fn write_frame_buffer_to<P: AsRef<Path>>(path: P, frame_buffer: &[Rgb8Pixel]) ->
         .read(false)
         .write(true)
         .create(true)
+        .truncate(true)
         .open(path)
         .unwrap();
     image
