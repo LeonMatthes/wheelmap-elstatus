@@ -13,7 +13,7 @@ lazy_static! {
             equipment_searches: vec![
                 "Gleis 1/2",
                 "Gleis 3/4",
-                "EG Tunnel",
+                "Ausgang Vorplatz",
             ]
         },
         // Potsdam Griebnitzsee
@@ -41,26 +41,26 @@ lazy_static! {
             equipment_searches: vec![
                 "Gleis 5/6 (S-Bahn)"
             ]
-        }
+        },
         // Potsdamer Platz
-        // EquipmentList {
-        //     latitude: 52.50925,
-        //     longitude: 13.3766,
-        //     equipment_searches: vec![
-        //         "Gleis 11/12 (S-Bahn)",
-        //         "Gleis 13/14 (S-Bahn)",
-        //         "EG zu UG"
-        //     ]
-        // },
-        // // Anhalter Bahnhof
-        // EquipmentList {
-        //     latitude: 52.503283,
-        //     longitude: 13.38133,
-        //     equipment_searches: vec! [
-        //         "Gleis 1/2 (S-Bahn)",
-        //         "Gleis 3/4 (S-Bahn)",
-        //     ]
-        // }
+        EquipmentList {
+            latitude: 52.50925,
+            longitude: 13.3766,
+            equipment_searches: vec![
+                "Gleis 11/12 (S-Bahn)",
+                "Gleis 13/14 (S-Bahn)",
+                "EG zu UG"
+            ]
+        },
+        // Anhalter Bahnhof
+        EquipmentList {
+            latitude: 52.503283,
+            longitude: 13.38133,
+            equipment_searches: vec! [
+                "Gleis 1/2 (S-Bahn)",
+                "Gleis 3/4 (S-Bahn)",
+            ]
+        }
     ];
 }
 
