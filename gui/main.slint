@@ -1,5 +1,6 @@
 import { Elevator, MyText } from "./lib.slint";
 import { SecondaryTag } from "./secondary.slint";
+import { AboutSlint } from "std-widgets.slint";
 
 component MainTag inherits Rectangle {
   width: 296px;
@@ -7,9 +8,6 @@ component MainTag inherits Rectangle {
   background: white;
 
   in property <[Elevator]> broken: [
-    { place: "test", name: "test"},
-    { place: "test", name: "test"},
-    { place: "test", name: "test"},
   ];
   in property <string> last_update: "18.11. - 16:20";
 
@@ -30,21 +28,23 @@ component MainTag inherits Rectangle {
       visible: broken.length == 0;
       width: parent.width;
       height: parent.height;
+      alignment: LayoutAlignment.center;
       MyText {
         text: "ElStatus";
         horizontal-alignment: TextHorizontalAlignment.center;
         vertical-alignment: TextVerticalAlignment.bottom;
+        height: self.min-height;
         font-size: 30px;
       }
       MyText {
-        text: "Last Update:";
+        text: "Last Update: \{last_update}\n";
         horizontal-alignment: TextHorizontalAlignment.center;
         height: self.min-height;
       }
       MyText {
-        text: last_update;
+        text: "#MadeWithSlint\nhttps://slint.dev/";
         horizontal-alignment: TextHorizontalAlignment.center;
-        font-size: 16px;
+        height: self.min-height;
       }
     }
 
