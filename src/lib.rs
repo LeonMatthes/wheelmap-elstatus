@@ -67,10 +67,11 @@ pub struct Equipment {
 
 const ACCESS_TOKEN: &str = "YOUR_ACCESS_TOKEN";
 
+#[derive(Serialize, Deserialize)]
 pub struct EquipmentList {
     pub latitude: f32,
     pub longitude: f32,
-    pub equipment_searches: Vec<&'static str>,
+    pub equipment_searches: Vec<String>,
 }
 
 pub fn get_equipments(list: &EquipmentList) -> Result<Vec<Equipment>, Box<dyn Error>> {
@@ -102,8 +103,8 @@ pub fn get_equipments(list: &EquipmentList) -> Result<Vec<Equipment>, Box<dyn Er
 
                 let mut results = Vec::new();
 
-                for &search in &list.equipment_searches {
-                    let query_result = corpus.search(search, 0.4);
+                for search in &list.equipment_searches {
+                    let query_result = corpus.search(&search, 0.4);
 
                     if let Some(equipment) = query_result.first().and_then(|result_name| {
                         source_equipments

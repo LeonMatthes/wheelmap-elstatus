@@ -1,74 +1,15 @@
 use clap::{Parser, Subcommand};
 use elstatus::*;
-use lazy_static::lazy_static;
-use std::error::Error;
+use std::{error::Error, path::PathBuf};
 use tera::Tera;
-
-lazy_static! {
-    static ref EQUIPMENTS: Vec<EquipmentList> = vec! [
-        // Berlin-Wannsee
-        EquipmentList {
-            latitude: 52.422206,
-            longitude: 13.1810253,
-            equipment_searches: vec![
-                "Gleis 1/2",
-                "Gleis 3/4",
-                "Ausgang Vorplatz",
-            ]
-        },
-        // Potsdam Griebnitzsee
-        EquipmentList {
-            latitude: 52.394356,
-            longitude: 13.127521,
-            equipment_searches: vec![
-                "Gleis 1/2",
-                "Gleis 5"
-            ]
-        },
-        // Berlin Hauptbahnhof
-        EquipmentList {
-            latitude: 52.525303,
-            longitude: 13.369338,
-            equipment_searches: vec![
-                "Gleis 3/4 (C/D) - Gleis 15/16",
-                "Gleis 5/6 (C/D) - Gleis 15/16",
-            ]
-        },
-        // Zoologischer Garten
-        EquipmentList {
-            latitude: 52.507_28,
-            longitude: 13.332334,
-            equipment_searches: vec![
-                "Gleis 5/6 (S-Bahn)"
-            ]
-        },
-        // Potsdamer Platz
-        EquipmentList {
-            latitude: 52.50925,
-            longitude: 13.3766,
-            equipment_searches: vec![
-                "Gleis 11/12 (S-Bahn)",
-                "Gleis 13/14 (S-Bahn)",
-                "EG zu UG"
-            ]
-        },
-        // Anhalter Bahnhof
-        EquipmentList {
-            latitude: 52.503283,
-            longitude: 13.38133,
-            equipment_searches: vec! [
-                "Gleis 1/2 (S-Bahn)",
-                "Gleis 3/4 (S-Bahn)",
-            ]
-        }
-    ];
-}
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 struct Cli {
     #[command(subcommand)]
     command: Command,
+    #[arg(short, value_name = "FILE_PATH")]
+    elevator_list: Option<PathBuf>,
 }
 
 #[derive(Subcommand, Debug)]
@@ -79,10 +20,26 @@ enum Command {
     Display(display::DisplayArgs),
 }
 
-fn main() -> Result<(), Box<dyn Error>> {
-    let cli = Cli::parse();
-
-    let (equipments, errors): (Vec<_>, Vec<_>) = EQUIPMENTS
+fn read_equipment_list(cli: &Cli) -> (Vec<Equipment>, Vec<Box<dyn Error>>) {
+    let json = std::fs::read_to_string(
+        cli.elevator_list
+            .clone()
+            .unwrap_or_else(|| "./equipments.json".into()),
+    );
+    let json = match json {
+        Ok(json) => json,
+        Err(err) => {
+            return (vec![], vec![Box::new(err)]);
+        }
+    };
+    let equipment_list: Result<Vec<EquipmentList>, _> = serde_json::from_str(&json);
+    let equipment_list = match equipment_list {
+        Ok(equipment_list) => equipment_list,
+        Err(err) => {
+            return (vec![], vec![Box::new(err)]);
+        }
+    };
+    let (equipments, errors): (Vec<_>, Vec<_>) = equipment_list
         .iter()
         .map(get_equipments)
         .partition(Result::is_ok);
@@ -93,6 +50,13 @@ fn main() -> Result<(), Box<dyn Error>> {
         .map(Result::err)
         .map(Option::unwrap)
         .collect();
+
+    (equipments, errors)
+}
+
+fn main() -> Result<(), Box<dyn Error>> {
+    let cli = Cli::parse();
+    let (equipments, errors) = read_equipment_list(&cli);
 
     for equipment in equipments.iter() {
         println!("{:?}", equipment);
