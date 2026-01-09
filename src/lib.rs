@@ -65,8 +65,6 @@ pub struct Equipment {
     place: Option<String>,
 }
 
-const ACCESS_TOKEN: &str = "YOUR_ACCESS_TOKEN";
-
 #[derive(Serialize, Deserialize)]
 pub struct EquipmentList {
     pub latitude: f32,
@@ -75,9 +73,10 @@ pub struct EquipmentList {
 }
 
 pub fn get_equipments(list: &EquipmentList) -> Result<Vec<Equipment>, Box<dyn Error>> {
+    let access_token = std::env::var("WHEELMAP_TOKEN")?;
     let request = reqwest::blocking::get(format!(
         "https://accessibility-cloud.freetls.fastly.net/equipment-infos.json?appToken={}&latitude={}&longitude={}&accuracy=500",
-        ACCESS_TOKEN, list.latitude, list.longitude
+        &access_token, list.latitude, list.longitude
     ))?;
 
     if !request.status().is_success() {
