@@ -19,9 +19,17 @@ clap = { version = "4", features = ["derive"] }
 ngrammatic="0.4"
 chrono = "0.4"
 
-slint="1.3"
+slint="1.15"
 rgb="*"
 image="0.24"
 
 [build-dependencies]
-slint-build="1.3"
+slint-build="1.15"
+
+[workspace.metadata.cross.target.aarch64-unknown-linux-gnu]
+# Install dependencies, see <https://github.com/cross-rs/cross/blob/main/docs/custom_images.md#adding-dependencies-to-existing-images>
+pre-build = [
+    "dpkg --add-architecture $CROSS_DEB_ARCH",
+    "apt-get update && apt-get --assume-yes install libfontconfig1-dev:$CROSS_DEB_ARCH"
+]
+
