@@ -1,4 +1,4 @@
-import { Elevator, MyText } from "./lib.slint";
+import { Place, MyText } from "./lib.slint";
 import { SecondaryTag } from "./secondary.slint";
 import { AboutSlint } from "std-widgets.slint";
 
@@ -7,7 +7,7 @@ component MainTag inherits Rectangle {
   height: 128px;
   background: white;
 
-  in property <[Elevator]> broken: [
+  in property <[Place]> broken: [
   ];
   in property <string> last_update: "18.11. - 16:20";
 
@@ -80,9 +80,9 @@ component MainTag inherits Rectangle {
   }
 }
 
-export component ElStatus {
+export component ElStatus inherits Window {
   in property <bool> main: false;
-  in property <[Elevator]> broken;
+  in property <[Place]> broken;
   in property <string> last_update;
   width: 296px;
   height: 128px;

@@ -9,6 +9,8 @@ struct Cli {
     #[command(subcommand)]
     command: Command,
     #[arg(short, value_name = "FILE_PATH")]
+    /// The file path to a JSON file containing the list of elevators.
+    /// Uses equipments.json in the current working dir by default.
     elevator_list: Option<PathBuf>,
 }
 

@@ -7,9 +7,16 @@ use reqwest::blocking::{multipart::Form, Client};
 use rgb::ComponentBytes;
 use slint::{
     platform::{software_renderer::*, Platform, PlatformError, WindowAdapter},
-    Rgb8Pixel, VecModel,
+    Rgb8Pixel, SharedString, VecModel,
 };
-use std::{error::Error, path::Path, rc::Rc, sync::Mutex, time::Duration};
+use std::{
+    collections::{hash_map::Entry, HashMap},
+    error::Error,
+    path::Path,
+    rc::Rc,
+    sync::Mutex,
+    time::Duration,
+};
 
 const WIDTH: usize = 296;
 const HEIGHT: usize = 128;
@@ -101,12 +108,28 @@ fn write_frame_buffer_to<P: AsRef<Path>>(path: P, frame_buffer: &[Rgb8Pixel]) ->
 
 fn render_ui(equipments: &[Equipment]) -> (RgbImage, RgbImage) {
     println!("💻 Rendering GUI");
-    let broken_equipments: Vec<_> = equipments
+    let mut places = HashMap::<String, Vec<String>>::new();
+    for equipment in equipments.iter().filter(|eq| !eq.working.unwrap_or(false)) {
+        match places.entry(equipment.place.clone().unwrap_or_default()) {
+            Entry::Occupied(mut occupied_entry) => {
+                occupied_entry.get_mut().push(equipment.name.clone())
+            }
+            Entry::Vacant(vacant_entry) => {
+                vacant_entry.insert(vec![equipment.name.clone()]);
+            }
+        }
+    }
+    let places: Vec<_> = places
         .iter()
-        .filter(|eq| !eq.working.unwrap_or(false))
-        .map(|eq| Elevator {
-            name: eq.name.clone().into(),
-            place: eq.place.clone().unwrap_or_default().into(),
+        .map(|(place, equipments)| {
+            let elevators: Vec<_> = equipments
+                .iter()
+                .map(|elevator| SharedString::from(elevator))
+                .collect();
+            Place {
+                place: place.into(),
+                elevators: Rc::new(VecModel::from(elevators)).into(),
+            }
         })
         .collect();
     let now = chrono::Local::now();
@@ -134,7 +157,7 @@ fn render_ui(equipments: &[Equipment]) -> (RgbImage, RgbImage) {
     slint::platform::set_platform(platform).unwrap();
 
     let main_tag = ElStatus::new().unwrap();
-    let vec_model = Rc::new(VecModel::from(broken_equipments));
+    let vec_model = Rc::new(VecModel::from(places));
     main_tag.set_broken(Rc::clone(&vec_model).into());
     main_tag.set_last_update(last_update.clone().into());
     main_tag.set_main(true);
